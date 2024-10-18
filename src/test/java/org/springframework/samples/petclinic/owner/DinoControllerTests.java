@@ -26,6 +26,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.assertj.core.util.Lists;
@@ -53,33 +58,47 @@ class DinoControllerTests {
 	@MockBean
 	private DinosaurService dinosaurService;
 
+	private List<Dinosaur> dinosaurs;
+
 	private Dinosaur dinosaur;
 
 	@BeforeEach
-	void setUp() {
-		dinosaur = new Dinosaur();
-		dinosaur.setId(1L);
-		dinosaur.setName("T-Rex");
-		dinosaur.setSpecies("Tyrannosaurus");
-		dinosaur.setSex("Male");
-		dinosaur.setCountryOfOrigin("USA");
-		dinosaur.setNumberOfScales(1000);
+	void setUp() throws IOException {
+		dinosaurs = new ArrayList<>();
+		try (BufferedReader br = new BufferedReader(new FileReader("src/test/resources/dinos.csv"))) {
+			String line;
+			// skip first line
+			br.readLine();
+			while ((line = br.readLine()) != null) {
+				String[] values = line.split(",");
+				Dinosaur dinosaur = new Dinosaur();
+				dinosaur.setId(Long.parseLong(values[0]));
+				dinosaur.setName(values[1]);
+				dinosaur.setSpecies(values[2]);
+				dinosaur.setSex(values[3]);
+				dinosaur.setCountryOfOrigin(values[4]);
+				dinosaur.setNumberOfScales(Integer.parseInt(values[5]));
+				dinosaurs.add(dinosaur);
+			}
+		}
+		dinosaur = dinosaurs.get(0);
 	}
 
 	@Test
 	void testGetAllDinosaurs() throws Exception {
-		given(dinosaurService.findAll()).willReturn(Lists.newArrayList(dinosaur));
+		given(dinosaurService.findAll()).willReturn(dinosaurs);
 
 		mockMvc.perform(get("/dinosaurs"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$[0].name", is(dinosaur.getName())));
+			.andExpect(jsonPath("$[0].name", is(dinosaurs.get(0).getName())));
 	}
 
 	@Test
 	void testGetDinosaurById() throws Exception {
-		given(dinosaurService.findById(1L)).willReturn(Optional.of(dinosaur));
+		Dinosaur dinosaur = dinosaurs.get(0);
+		given(dinosaurService.findById(dinosaur.getId())).willReturn(Optional.of(dinosaur));
 
-		mockMvc.perform(get("/dinosaurs/1"))
+		mockMvc.perform(get("/dinosaurs/" + dinosaur.getId()))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.name", is(dinosaur.getName())));
 	}
