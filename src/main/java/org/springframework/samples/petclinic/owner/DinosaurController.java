@@ -115,4 +115,9 @@ public class DinosaurController {
 		}
 	}
 
+	@GetMapping("/country/{country}")
+	public List<Dinosaur> getDinosaursByCountryOfOrigin(@PathVariable String country) {
+		return dinosaurService.getDinosaursByCountryOfOrigin(country);
+	}
+
 }
