@@ -35,6 +35,9 @@ public class Dinosaur {
 	}
 
 	public void setName(String name) {
+		if (!name.matches("[a-zA-Z0-9]+")) {
+			throw new IllegalArgumentException("Name must be alphanumeric");
+		}
 		this.name = name;
 	}
 

@@ -109,7 +109,7 @@ class DinoControllerTests {
 
 		mockMvc.perform(post("/dinosaurs").contentType("application/json")
 			.content(
-					"{\"name\":\"T-Rex\",\"species\":\"Tyrannosaurus\",\"sex\":\"Male\",\"countryOfOrigin\":\"USA\",\"numberOfScales\":1000}"))
+					"{\"name\":\"TRex\",\"species\":\"Tyrannosaurus\",\"sex\":\"Male\",\"countryOfOrigin\":\"USA\",\"numberOfScales\":1000}"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.name", is(dinosaur.getName())));
 	}
@@ -121,7 +121,7 @@ class DinoControllerTests {
 
 		mockMvc.perform(put("/dinosaurs/1").contentType("application/json")
 			.content(
-					"{\"name\":\"T-Rex\",\"species\":\"Tyrannosaurus\",\"sex\":\"Male\",\"countryOfOrigin\":\"USA\",\"numberOfScales\":1000}"))
+					"{\"name\":\"TRex\",\"species\":\"Tyrannosaurus\",\"sex\":\"Male\",\"countryOfOrigin\":\"USA\",\"numberOfScales\":1000}"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.name", is(dinosaur.getName())));
 	}
@@ -131,6 +131,25 @@ class DinoControllerTests {
 		given(dinosaurService.findById(1L)).willReturn(Optional.of(dinosaur));
 
 		mockMvc.perform(delete("/dinosaurs/1")).andExpect(status().isNoContent());
+	}
+
+	@Test
+	void testCreateDinosaurWithBadNameField() {
+		given(dinosaurService.save(any(Dinosaur.class))).willReturn(dinosaur);
+
+		List<String> badNames = Lists.newArrayList("T-Rex!", "T-Rex?", "T-Rex$");
+
+		badNames.forEach(name -> {
+			try {
+				mockMvc.perform(post("/dinosaurs").contentType("application/json")
+					.content("{\"name\":\"" + name
+							+ "\",\"species\":\"Tyrannosaurus\",\"sex\":\"Male\",\"countryOfOrigin\":\"USA\",\"numberOfScales\":1000}"))
+					.andExpect(status().isBadRequest());
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
 	}
 
 }
